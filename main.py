@@ -1,7 +1,5 @@
 #!/usr/bin/env python
 
-# Modified main.py in testBranch using git
-
 import argparse
 
 #bchoc add -c case_id -i item_id [-i item_id ...] -c creator -p password(creator’s)
