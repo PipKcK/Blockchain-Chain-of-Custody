@@ -8,7 +8,7 @@ import argparse
 #bchoc show cases -p password
 #bchoc show items -c case_id -p password
 #bchoc show history [-c case_id] [-i item_id] [-n num_entries] [-r] -p password
-#bchoc remove -i item_id -y reason [-o owner] -p password(creator’s)
+#bchoc remove -i item_id -y reason -p password(creator’s)
 #bchoc init
 #bchoc verify
 
@@ -58,11 +58,10 @@ def main():
     parser_show_history.add_argument('-r', '--reverse', action='store_true', required=False, help='Reverse')
     parser_show_history.add_argument('-p', '--password', required=True, help='Password')
 
-    #bchoc remove -i item_id -y reason [-o owner] -p password(creator’s)
+    #bchoc remove -i item_id -y reason -p password(creator’s)
     parser_remove = subparsers.add_parser('remove')
     parser_remove.add_argument('-i', '--item_id', required=True, help='Item ID')
     parser_remove.add_argument('-y', '--reason', required=True, help='Reason')
-    parser_remove.add_argument('-o', '--owner', required=True, help='Owner')
     parser_remove.add_argument('-p', '--password', required=True, help='Password')
 
     args = parser.parse_args()
@@ -109,7 +108,6 @@ def main():
         print(f"Command: {args.command}")
         print(f"Item ID: {args.item_id}")
         print(f"Reason: {args.reason}")
-        print(f"Owner: {args.owner}")
         print(f"Password: {args.password}")
         # remove_function()
 
