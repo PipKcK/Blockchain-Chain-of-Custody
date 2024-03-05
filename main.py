@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import argparse
+from icecream import ic
 
 #Authors: ZebraCatPenguin: Ujjwal, Wejdan
 
@@ -13,8 +14,6 @@ import argparse
 #bchoc remove -i item_id -y reason -p password(creator’s)
 #bchoc init
 #bchoc verify
-
-#Wejdan1
 
 def main():
 
@@ -68,59 +67,67 @@ def main():
     parser_remove.add_argument('-y', '--reason', required=True, help='Reason')
     parser_remove.add_argument('-p', '--password', required=True, help='Password')
 
+    # bchoc init
+    subparsers.add_parser('init')
+
+    # bchoc verify
+    subparsers.add_parser('verify')
+
     args = parser.parse_args()
 
     if args.command == 'add':
-        print(f"Command: {args.command}")
-        print(f"Case ID: {args.case_id}")
-        print(f"Item ID: {args.item_id}")
-        print(f"Creator: {args.creator}")
-        print(f"Password: {args.password}")
+        ic(args.command)
+        ic(args.case_id)
+        ic(args.item_id)
+        ic(args.creator)
+        ic(args.password)
+
+        # add_function()
 
     if args.command == 'checkout':
-        print(f"Command: {args.command}")
-        print(f"Item ID: {args.item_id}")
-        print(f"Password: {args.password}")
+        ic(args.command)
+        ic(args.item_id)
+        ic(args.password)
         # checkout_function()
 
     if args.command == 'checkin':
-        print(f"Command: {args.command}")
-        print(f"Item ID: {args.item_id}")
-        print(f"Password: {args.password}")
+        ic(args.command)
+        ic(args.item_id)
+        ic(args.password)
         # checkin_function()
 
     if args.command == 'show':
         if args.show_command == 'cases':
-            print(f"Command: {args.show_command}")
-            print(f"Password: {args.password}")
+            ic(args.show_command)
+            ic(args.password)
             # show_cases_function()
         if args.show_command == 'items':
-            print(f"Command: {args.show_command}")
-            print(f"Case ID: {args.case_id}")
-            print(f"Password: {args.password}")
+            ic(args.show_command)
+            ic(args.case_id)
+            ic(args.password)
             # show_items_function()
         if args.show_command == 'history': # Note: If optional args are not provided, they will be None
-            print(f"Command: {args.show_command}")
-            print(f"Case ID: {args.case_id}")
-            print(f"Item ID: {args.item_id}")
-            print(f"Num Entries: {args.num_entries}")
-            print(f"Reverse: {args.reverse}")
-            print(f"Password: {args.password}")
+            ic(args.show_command)
+            ic(args.case_id)
+            ic(args.item_id)
+            ic(args.num_entries)
+            ic(args.reverse)
+            ic(args.password)
             # show_history_function()
     
     if args.command == 'remove': # Note: If optional args are not provided, they will be None
-        print(f"Command: {args.command}")
-        print(f"Item ID: {args.item_id}")
-        print(f"Reason: {args.reason}")
-        print(f"Password: {args.password}")
+        ic(args.command)
+        ic(args.item_id)
+        ic(args.reason)
+        ic(args.password)
         # remove_function()
 
     if args.command == 'init':
-        print(f"Command: {args.command}")
+        ic(args.command)
         # init_function()
 
     if args.command == 'verify':
-        print(f"Command: {args.command}")
+        ic(args.command)
         # verify_function()
 
 
