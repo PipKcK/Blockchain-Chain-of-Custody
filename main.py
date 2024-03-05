@@ -2,6 +2,8 @@
 
 import argparse
 
+#Authors: ZebraCatPenguin: Ujjwal, Wejdan
+
 #bchoc add -c case_id -i item_id [-i item_id ...] -c creator -p password(creator’s)
 #bchoc checkout -i item_id -p password
 #bchoc checkin -i item_id -p password
