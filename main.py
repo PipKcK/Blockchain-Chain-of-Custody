@@ -2,6 +2,7 @@
 
 import argparse
 from icecream import ic
+from Block import *
 
 #Authors: ZebraCatPenguin: Ujjwal, Wejdan
 
@@ -83,6 +84,12 @@ def main():
         ic(args.password)
 
         # add_function()
+        blockchain = Blockchain()
+        print("--------------------")
+        state = "GENERAL" #Temporary. Unsure where to add this yet
+        data = "General block" #Temporary. Unsure where to add this yet
+        blockchain.add_block(args.case_id, args.item_id, state, args.creator, data, args.password)
+        blockchain.print_blockchain()
 
     if args.command == 'checkout':
         ic(args.command)
