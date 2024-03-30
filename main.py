@@ -154,10 +154,12 @@ def main():
 
 
 def init_function():
-    if os.path.exists(filePath):
+    if os.path.exists(filePath) and check_initial_block(filePath):
+        ic("File Exist and Initial Block is present")
         return True
     else:  
         # File doesn't exist, create a block with initial information
+        ic("File exist but Initial Block is not present")
         now = datetime.now()
         timestamp = datetime.timestamp(now)
         
@@ -176,11 +178,31 @@ def init_function():
         currentBlockHead = BlockHead(*hFormat.unpack(packedHVals))
         currentBlockData = BlockData(*dFormat.unpack(packedDataVals))
 
+        print(currentBlockHead.state)
+        print(str.encode("INITIAL"))
+
         # Write block data to file
         with open(filePath, 'wb') as file:
             file.write(packedHVals)
             file.write(packedDataVals)
-            file.close()
+            file.close()  
+    return False
+
+
+def check_initial_block(filePath):
+    with open(filePath, 'rb') as file:
+        packedHVals = file.read(hFormat.size)
+        packedDataVals = file.read(dFormat.size)
+
+    actual_block_head = BlockHead(*hFormat.unpack(packedHVals))
+    actual_block_data = BlockData(*dFormat.unpack(packedDataVals))
+
+    if actual_block_head.state.decode().strip('\x00') == "INITIAL" and actual_block_data.data.decode().strip('\x00') == "Initial block":
+        return True
+    return False
+
+def check_if_block_id_present():
+
 
 
 if __name__ == "__main__":
