@@ -2,6 +2,10 @@
 
 import argparse
 from icecream import ic
+import os
+import struct
+from datetime import datetime
+
 
 #Authors: ZebraCatPenguin: Ujjwal, Wejdan
 
@@ -29,6 +33,10 @@ class BlockHead:
 class BlockData:
     def __init__(self, data):
         self.data = data
+
+filePath = "/Users/sidpro/Desktop/CSE 469/Final Project/Blockchain-Chain-of-Custody/BlockChain.bin"
+hFormat = struct.Struct('32s d 16s I 12s 32s 32s I')
+dFormat = struct.Struct('14s')
 
 def main():
 
@@ -138,11 +146,41 @@ def main():
 
     if args.command == 'init':
         ic(args.command)
-        # init_function()
+        init_function()
 
     if args.command == 'verify':
         ic(args.command)
         # verify_function()
+
+
+def init_function():
+    if os.path.exists(filePath):
+        return True
+    else:  
+        # File doesn't exist, create a block with initial information
+        now = datetime.now()
+        timestamp = datetime.timestamp(now)
+        
+        hash_val = b''
+        case_id_val = b''
+        item_id_val = 0
+        state_val = str.encode("INITIAL")
+        creator_val = b''
+        owner_val = b''
+        length_val = 14
+        data_vals = str.encode("Initial block")
+
+        packedHVals = hFormat.pack(hash_val, timestamp, case_id_val, item_id_val, state_val, creator_val, owner_val, length_val)
+        packedDataVals = dFormat.pack(data_vals)
+
+        currentBlockHead = BlockHead(*hFormat.unpack(packedHVals))
+        currentBlockData = BlockData(*dFormat.unpack(packedDataVals))
+
+        # Write block data to file
+        with open(filePath, 'wb') as file:
+            file.write(packedHVals)
+            file.write(packedDataVals)
+            file.close()
 
 
 if __name__ == "__main__":

@@ -15,6 +15,21 @@ from icecream import ic
 #bchoc init
 #bchoc verify
 
+class BlockHead:
+    def __init__(self, hash, timestamp, case_id, item_id, state, creator, owner, length):
+        self.hash = hash
+        self.timestamp = timestamp
+        self.case_id = case_id
+        self.item_id = item_id
+        self.state = state
+        self.creator = creator
+        self.owner = owner
+        self.length = length
+
+class BlockData:
+    def __init__(self, data):
+        self.data = data
+
 def main():
 
     parser = argparse.ArgumentParser(prog='main')
@@ -81,7 +96,6 @@ def main():
         ic(args.item_id)
         ic(args.creator)
         ic(args.password)
-
         # add_function()
 
     if args.command == 'checkout':
@@ -129,6 +143,11 @@ def main():
     if args.command == 'verify':
         ic(args.command)
         # verify_function()
+
+
+def init_function():
+    print("Init function")
+
 
 
 if __name__ == "__main__":
