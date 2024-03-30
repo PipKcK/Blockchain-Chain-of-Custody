@@ -5,6 +5,8 @@ from icecream import ic
 import os
 import struct
 from datetime import datetime
+from Crypto.Cipher import AES
+from Crypto.Hash import SHA256
 
 
 #Authors: ZebraCatPenguin: Ujjwal, Wejdan
@@ -37,6 +39,9 @@ class BlockData:
 filePath = "/Users/sidpro/Desktop/CSE 469/Final Project/Blockchain-Chain-of-Custody/BlockChain.bin"
 hFormat = struct.Struct('32s d 16s I 12s 32s 32s I')
 dFormat = struct.Struct('14s')
+blocks = {}
+blockSequence = []
+
 
 def main():
 
@@ -104,7 +109,7 @@ def main():
         ic(args.item_id)
         ic(args.creator)
         ic(args.password)
-        # add_function()
+        add_function(args.command, args.case_id, args.item_id, args.creator, args.password)
 
     if args.command == 'checkout':
         ic(args.command)
@@ -201,9 +206,19 @@ def check_initial_block(filePath):
         return True
     return False
 
-def check_if_block_id_present():
-
-
+def add_function(command, case_id, item_ids, creator, password):
+    for item_id in item_ids:
+        if case_id in blocks:
+            if blocks[case_id][item_id] is None:
+                length = len(blocks[case_id][item_id])
+                prev_hash = None if length == 0 else blocks[case_id][item_id][length-1].hash
+                newBlock = BlockHead(prev_hash, datetime.now, case_id, item_id, 'CHECKEDIN', creator, password)
+            else: 
+                print("Item ID already exists" , item_id)
+        else:
+            blocks[case_id] = {}
+            blocks[case_id][item_id] = None
+            add_function(command, case_id, item_ids, creator, password)
 
 if __name__ == "__main__":
     main()
