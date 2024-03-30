@@ -7,6 +7,7 @@ import struct
 from datetime import datetime
 from Crypto.Cipher import AES
 from Crypto.Hash import SHA256
+import uuid
 
 
 #Authors: ZebraCatPenguin: Ujjwal, Wejdan
@@ -39,7 +40,9 @@ class BlockData:
 filePath = "/Users/sidpro/Desktop/CSE 469/Final Project/Blockchain-Chain-of-Custody/BlockChain.bin"
 hFormat = struct.Struct('32s d 16s I 12s 32s 32s I')
 dFormat = struct.Struct('14s')
-blocks = {}
+
+blockHeadMap = {}
+blockDataMap = {}
 blockSequence = []
 
 
@@ -109,7 +112,7 @@ def main():
         ic(args.item_id)
         ic(args.creator)
         ic(args.password)
-        add_function(args.command, args.case_id, args.item_id, args.creator, args.password)
+        add_function(args.command, args.case_id, args.item_id, args.creator, args.password , "NEW BLOCK", 10)
 
     if args.command == 'checkout':
         ic(args.command)
@@ -180,11 +183,8 @@ def init_function():
         packedHVals = hFormat.pack(hash_val, timestamp, case_id_val, item_id_val, state_val, creator_val, owner_val, length_val)
         packedDataVals = dFormat.pack(data_vals)
 
-        currentBlockHead = BlockHead(*hFormat.unpack(packedHVals))
-        currentBlockData = BlockData(*dFormat.unpack(packedDataVals))
-
-        print(currentBlockHead.state)
-        print(str.encode("INITIAL"))
+        # currentBlockHead = BlockHead(*hFormat.unpack(packedHVals))
+        # currentBlockData = BlockData(*dFormat.unpack(packedDataVals))
 
         # Write block data to file
         with open(filePath, 'wb') as file:
@@ -206,19 +206,68 @@ def check_initial_block(filePath):
         return True
     return False
 
-def add_function(command, case_id, item_ids, creator, password):
-    for item_id in item_ids:
-        if case_id in blocks:
-            if blocks[case_id][item_id] is None:
-                length = len(blocks[case_id][item_id])
-                prev_hash = None if length == 0 else blocks[case_id][item_id][length-1].hash
-                newBlock = BlockHead(prev_hash, datetime.now, case_id, item_id, 'CHECKEDIN', creator, password)
-            else: 
-                print("Item ID already exists" , item_id)
+def add_function(command, case_id, item_ids, creator, password, blockData , blockLen):
+    if init_function():
+        if case_id in blockHeadMap:
+            for item_id in item_ids:
+                if item_id not in blockHeadMap[case_id]:
+                    
+                    timestamp = datetime.timestamp(datetime.now())
+
+                    newBlockData = BlockData(blockData)
+                    newBlock = BlockHead(None, timestamp , case_id, item_id, 'CHECKEDIN', creator, password, blockLen)
+
+                    blockSequence.append(newBlock)
+                    blockHeadMap[case_id][item_id] = []
+                    blockHeadMap[case_id][item_id].append(newBlock)
+                    blockDataMap[newBlock] = newBlockData
+
+                    pack_and_add_block(newBlock, newBlockData)
+                    print("The Block has been added")
+                else: 
+                    print("Item ID already exists" , item_id)
         else:
-            blocks[case_id] = {}
-            blocks[case_id][item_id] = None
-            add_function(command, case_id, item_ids, creator, password)
+            blockHeadMap[case_id] = {}
+            add_function(command, case_id, item_ids, creator, password , blockData , blockLen)
+    else:
+        ic("Initiating New File")
+        add_function(command, case_id, item_ids, creator, password, blockData , blockLen)
+
+def encrpty_data(data, password):
+
+    # First, hash the data using a secure hash function like SHA-256
+    hash_object = SHA256.new()
+    hash_object.update(data)
+    hash_value = hash_object.digest()
+
+    # Then, encrypt the hashed value using AES ECB mode
+    key = b'yn2E\x8fp\xa9\xcb\x8a[\xff!\xe5\x8d\xf7\xc1'  # Key for AES encryption (should be 16, 24, or 32 bytes long)
+    cipher = AES.new(key, AES.MODE_ECB)
+    encrypted_hash = cipher.encrypt(hash_value)
+
+    # Now, 'encrypted_hash' contains the hashed value of 'data' using AES ECB mode
+    print(encrypted_hash)
+
+    return encrypted_hash
+
+def pack_and_add_block(blockhead , blockdata):
+    timestamp = blockhead.timestamp
+    hash_val = b'' if blockhead.hash is None else blockhead.hash
+    case_id_val = uuid.UUID(blockhead.case_id).bytes
+    item_id_val = int(blockhead.item_id)
+    state_val = str.encode(blockhead.state)
+    creator_val = str.encode(blockhead.creator)
+    owner_val = str.encode(blockhead.owner)
+    length_val = blockhead.length
+    data_vals = str.encode(blockdata.data)
+
+    packedHVals = hFormat.pack(hash_val, timestamp, case_id_val, item_id_val, state_val, creator_val, owner_val, length_val)
+    packedDataVals = dFormat.pack(data_vals)
+
+    with open(filePath, 'ab') as file:
+        file.write(packedHVals)
+        file.write(packedDataVals)
+        file.close()
 
 if __name__ == "__main__":
     main()
