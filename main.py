@@ -8,6 +8,7 @@ from datetime import datetime
 from Crypto.Cipher import AES
 from Crypto.Hash import SHA256
 import uuid
+import sys
 
 
 #Authors: ZebraCatPenguin: Ujjwal, Wejdan
@@ -38,7 +39,7 @@ class BlockData:
         self.data = data
 
 filePath = "/Users/sidpro/Desktop/CSE 469/Final Project/Blockchain-Chain-of-Custody/BlockChain.bin"
-hFormat = struct.Struct('32s d 16s I 12s 32s 32s I')
+hFormat = struct.Struct('32s d 32s 32s 12s 12s 12s I')
 dFormat = struct.Struct('14s')
 
 blockHeadMap = {}
@@ -48,15 +49,17 @@ blockSequence = []
 
 def main():
 
-    parser = argparse.ArgumentParser(prog='main')
+    init_load_blocks(filePath)
+    print_block_info()
 
+    parser = argparse.ArgumentParser(prog='main')
     subparsers = parser.add_subparsers(dest='command')
 
     #bchoc add -c case_id -i item_id [-i item_id ...] -c creator -p password(creator’s)
     parser_add = subparsers.add_parser('add')
     parser_add.add_argument('-c', '--case_id', required=True, help='Case ID')
     parser_add.add_argument('-i', '--item_id', action='append', required=True, help='Item ID')
-    parser_add.add_argument('-C', '--creator', required=True, help='Creator')
+    parser_add.add_argument('-g', '--creator', required=True, help='Creator')
     parser_add.add_argument('-p', '--password', required=True, help='Password')
 
     #bchoc checkout -i item_id -p password
@@ -112,7 +115,9 @@ def main():
         ic(args.item_id)
         ic(args.creator)
         ic(args.password)
-        add_function(args.command, args.case_id, args.item_id, args.creator, args.password , "NEW BLOCK", 10)
+        add_function(args.case_id, args.item_id, args.creator, args.password , "NEW BLOCK", 9, True)
+        print_block_info()
+
 
     if args.command == 'checkout':
         ic(args.command)
@@ -165,73 +170,153 @@ def init_function():
     if os.path.exists(filePath) and check_initial_block(filePath):
         ic("File Exist and Initial Block is present")
         return True
-    else:  
-        # File doesn't exist, create a block with initial information
-        ic("File exist but Initial Block is not present")
-        now = datetime.now()
-        timestamp = datetime.timestamp(now)
-        
-        hash_val = b''
-        case_id_val = b''
-        item_id_val = 0
-        state_val = str.encode("INITIAL")
-        creator_val = b''
-        owner_val = b''
-        length_val = 14
-        data_vals = str.encode("Initial block")
+    else: 
+        Prev_hash = b''*32  # 32 bytes
+        Timestamp = 0  # 08 bytes
+        Case_id = b'0'*32      # 32 bytes (32 zero's)
+        Evidence_id = b'0'*32  # 32 bytes (32 zero's)
+        State = b'INITIAL\0\0\0\0\0'  # 12 bytes
+        creator = b'\0'*12    # 12 bytes (12 null bytes)
+        owner = b'\0'*12       # 12 bytes (12 null bytes)
+        D_length = 14  # 04 bytes
+        Data = b'Initial block\0'  # 14 bytes
+                                  #   32s         d         32s      32s         12s     12s      12s     I
+        packedHVals = hFormat.pack(Prev_hash, Timestamp, Case_id, Evidence_id, State, creator, owner, D_length)
+        packedDataVals = dFormat.pack(Data)
 
-        packedHVals = hFormat.pack(hash_val, timestamp, case_id_val, item_id_val, state_val, creator_val, owner_val, length_val)
-        packedDataVals = dFormat.pack(data_vals)
-
-        # currentBlockHead = BlockHead(*hFormat.unpack(packedHVals))
-        # currentBlockData = BlockData(*dFormat.unpack(packedDataVals))
-
-        # Write block data to file
         with open(filePath, 'wb') as file:
             file.write(packedHVals)
             file.write(packedDataVals)
-            file.close()  
-    return False
+            file.close()
+        return True  
 
+def init_load_blocks(filePath):
+    if not os.path.exists(filePath) or not check_initial_block(filePath):
+        ic("File not found or Initial block not found. Creating new file.")
+        init_function()
+        return
+
+    try:
+        with open(filePath, 'rb') as fp:
+            while True:
+                hContent = fp.read(hFormat.size)
+                if not hContent:
+                    break
+
+                currentBlockHead = BlockHead(*hFormat.unpack(hContent))
+                ic('BlockData Length', currentBlockHead.length)
+
+                dFormat = struct.Struct(str(currentBlockHead.length) + 's')
+
+                dataContent = fp.read(dFormat.size)
+                currentBlockData = BlockData(*dFormat.unpack(dataContent))
+
+                add_block_to_maps(currentBlockHead, currentBlockData)
+
+    except Exception as e:
+        print("An exception occurred:", e)
+        sys.exit(1)
+
+def add_block_to_maps(blockHead, blockData):
+    case_id = blockHead.case_id
+    item_id = blockHead.item_id
+
+    if case_id not in blockHeadMap:
+        blockHeadMap[case_id] = {}
+    
+    if item_id not in blockHeadMap[case_id]:
+        blockHeadMap[case_id][item_id] = []
+    
+    blockHeadMap[case_id][item_id].append(blockHead)
+    blockDataMap[blockHead] = blockData
+    blockSequence.append(blockHead)
 
 def check_initial_block(filePath):
+    # Check if the file is large enough to contain both header and data
+    if (hFormat.size + dFormat.size) > os.path.getsize(filePath):
+        print("Blockchain file is too small.")
+        return False
+
     with open(filePath, 'rb') as file:
         packedHVals = file.read(hFormat.size)
         packedDataVals = file.read(dFormat.size)
 
     actual_block_head = BlockHead(*hFormat.unpack(packedHVals))
     actual_block_data = BlockData(*dFormat.unpack(packedDataVals))
-
-    if actual_block_head.state.decode().strip('\x00') == "INITIAL" and actual_block_data.data.decode().strip('\x00') == "Initial block":
+    
+    # Expected values
+    expected_block_head = BlockHead(
+        b'\0'*32, 0.0 , b'0'*32, b'0'*32, b'INITIAL\0\0\0\0\0', b'\0'*12, b'\0'*12, 14
+    )
+    expected_block_data = BlockData(b'Initial block\0')
+    
+    if (
+        actual_block_head.hash == expected_block_head.hash and
+        actual_block_head.timestamp == expected_block_head.timestamp and
+        actual_block_head.case_id == expected_block_head.case_id and
+        actual_block_head.item_id == expected_block_head.item_id and
+        actual_block_head.state == expected_block_head.state and
+        actual_block_head.creator == expected_block_head.creator and
+        actual_block_head.owner == expected_block_head.owner and
+        actual_block_head.length == expected_block_head.length and
+        actual_block_data.data == expected_block_data.data
+    ):
+        print("\nBlockchain file found with INITIAL block.")
         return True
+    
+    print("\nBlockchain file does not contain the expected INITIAL block.")
     return False
 
-def add_function(command, case_id, item_ids, creator, password, blockData , blockLen):
-    if init_function():
-        if case_id in blockHeadMap:
-            for item_id in item_ids:
-                if item_id not in blockHeadMap[case_id]:
-                    
-                    timestamp = datetime.timestamp(datetime.now())
 
-                    newBlockData = BlockData(blockData)
-                    newBlock = BlockHead(None, timestamp , case_id, item_id, 'CHECKEDIN', creator, password, blockLen)
+# def add_function(case_id, item_ids, creator, password, blockData , blockLen , toWrite):
+#     if  init_function():  
+#                            # Check if the file is initialized              
+#         if case_id not in blockHeadMap:
+#                 blockHeadMap[case_id] = {}
+#         for item_id in item_ids:
+#             if item_id not in blockHeadMap[case_id]:
+#                 timestamp = datetime.timestamp(datetime.now())
+#                 newBlockData = BlockData(blockData)
+#                 newBlock = BlockHead(None, timestamp , case_id, item_id, 'CHECKEDIN', creator, password, blockLen)
 
-                    blockSequence.append(newBlock)
-                    blockHeadMap[case_id][item_id] = []
-                    blockHeadMap[case_id][item_id].append(newBlock)
-                    blockDataMap[newBlock] = newBlockData
+#                 blockSequence.append(newBlock)
+#                 blockHeadMap[case_id][item_id] = []
+#                 blockHeadMap[case_id][item_id].append(newBlock)
+#                 blockDataMap[newBlock] = newBlockData
+#                 if toWrite:
+#                     pack_and_add_block(newBlock, newBlockData)
+#                 print("The Block has been added")
+#             else: 
+#                 print("Item ID already exists" , item_id)     
 
-                    pack_and_add_block(newBlock, newBlockData)
-                    print("The Block has been added")
-                else: 
-                    print("Item ID already exists" , item_id)
-        else:
+def add_function(case_id, item_ids, creator, password, blockData, blockLen, toWrite):
+    print("Inside add_function")
+    if init_function() == True:
+        print(f"File initialized: {filePath}")
+        if case_id not in blockHeadMap:
+            print(f"Case ID {case_id} does not exist in blockHeadMap")
             blockHeadMap[case_id] = {}
-            add_function(command, case_id, item_ids, creator, password , blockData , blockLen)
+        for item_id in item_ids:
+            if item_id not in blockHeadMap[case_id]:
+                timestamp = datetime.timestamp(datetime.now())
+                newBlockData = BlockData(blockData)
+                newBlock = BlockHead(None, timestamp, case_id, item_id, 'CHECKEDIN', creator, password, blockLen)
+
+                blockSequence.append(newBlock)
+                blockHeadMap[case_id][item_id] = []
+                blockHeadMap[case_id][item_id].append(newBlock)
+                blockDataMap[newBlock] = newBlockData
+
+                if toWrite:
+                    print("Writing block to file")
+                    pack_and_add_block(newBlock, newBlockData)
+                
+                print("The Block has been added")
+            else:
+                print("Item ID already exists", item_id)            
     else:
-        ic("Initiating New File")
-        add_function(command, case_id, item_ids, creator, password, blockData , blockLen)
+        print("File not initialized. Initiating new file.")
+        add_function(case_id, item_ids, creator, password, blockData, blockLen, toWrite)
 
 def encrpty_data(data, password):
 
@@ -250,24 +335,49 @@ def encrpty_data(data, password):
 
     return encrypted_hash
 
-def pack_and_add_block(blockhead , blockdata):
+def pack_and_add_block(blockhead, blockdata):
+
     timestamp = blockhead.timestamp
     hash_val = b'' if blockhead.hash is None else blockhead.hash
-    case_id_val = uuid.UUID(blockhead.case_id).bytes
-    item_id_val = int(blockhead.item_id)
-    state_val = str.encode(blockhead.state)
-    creator_val = str.encode(blockhead.creator)
-    owner_val = str.encode(blockhead.owner)
+    case_id_val = str(blockhead.case_id).encode('utf-8')
+    item_id_val = int(blockhead.item_id).to_bytes(4, byteorder='big')  # Assuming item_id is 4 bytes
+    state_val = blockhead.state.encode('utf-8')
+    creator_val = blockhead.creator.encode('utf-8')
+    owner_val = blockhead.owner.encode('utf-8')
     length_val = blockhead.length
-    data_vals = str.encode(blockdata.data)
+    data_vals = blockdata.data.encode('utf-8')
 
-    packedHVals = hFormat.pack(hash_val, timestamp, case_id_val, item_id_val, state_val, creator_val, owner_val, length_val)
-    packedDataVals = dFormat.pack(data_vals)
+    # Define the format string
+    #hFormat = struct.Struct('32s d 16s I 12s 12s 12s I')
+
+    # Pack the values
+    packedHVals = hFormat.pack(
+        hash_val, timestamp, case_id_val, item_id_val, state_val, creator_val, owner_val, length_val
+    )
+    packedDataVals = data_vals  # No need to pack a single value
 
     with open(filePath, 'ab') as file:
         file.write(packedHVals)
         file.write(packedDataVals)
-        file.close()
+
+def print_block_info():
+    print("blockHeadMap:")
+    for case_id, item_ids in blockHeadMap.items():
+        print(f"Case ID: {case_id}")
+        for item_id, blocks in item_ids.items():
+            print(f"\tItem ID: {item_id}")
+            for block in blocks:
+                print(f"\t\tBlock Head: {block}")
+    
+    print("\nblockDataMap:")
+    for block, block_data in blockDataMap.items():
+        print(f"Block Head: {block}")
+        print(f"\tBlock Data: {block_data}")
+    
+    print("\nblockSequence:")
+    for block in blockSequence:
+        print(block)
+
 
 if __name__ == "__main__":
     main()
