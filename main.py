@@ -1,7 +1,6 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import argparse
-from icecream import ic
 import os
 import struct
 from datetime import datetime
@@ -9,6 +8,8 @@ from Crypto.Cipher import AES
 from Crypto.Hash import SHA256
 import uuid
 import sys
+from datetime import datetime
+
 
 
 #Authors: ZebraCatPenguin: Ujjwal, Wejdan
@@ -38,6 +39,14 @@ class BlockData:
     def __init__(self, data):
         self.data = data
 
+password_map = {
+    "P80P": "BCHOC_PASSWORD_POLICE",
+    "L76L": "BCHOC_PASSWORD_LAWYER",
+    "A65A": "BCHOC_PASSWORD_ANALYST",
+    "E69E": "BCHOC_PASSWORD_EXECUTIVE",
+    "C67C": "BCHOC_PASSWORD_CREATOR"
+}
+
 filePath = "/Users/sidpro/Desktop/CSE 469/Final Project/Blockchain-Chain-of-Custody/BlockChain.bin"
 hFormat = struct.Struct('32s d 32s 32s 12s 12s 12s I')
 dFormat = struct.Struct('14s')
@@ -49,8 +58,13 @@ blockSequence = []
 
 def main():
 
+    blockchain_file_path = os.getenv('BCHOC_FILE_PATH')
+    if blockchain_file_path:
+        global filePath
+        filePath = blockchain_file_path
+    
     init_load_blocks(filePath)
-    print_block_info()
+    ##print_block_info()
 
     parser = argparse.ArgumentParser(prog='main')
     subparsers = parser.add_subparsers(dest='command')
@@ -110,65 +124,51 @@ def main():
     args = parser.parse_args()
 
     if args.command == 'add':
-        ic(args.command)
-        ic(args.case_id)
-        ic(args.item_id)
-        ic(args.creator)
-        ic(args.password)
+        # ic(args.command)
+        # ic(args.case_id)
+        # ic(args.item_id)
+        # ic(args.creator)
+        # ic(args.password)
         add_function(args.case_id, args.item_id, args.creator, args.password , "NEW BLOCK", 9, True)
-        print_block_info()
+        #print_block_info()
 
 
     if args.command == 'checkout':
-        ic(args.command)
-        ic(args.item_id)
-        ic(args.password)
+        return
         # checkout_function()
 
     if args.command == 'checkin':
-        ic(args.command)
-        ic(args.item_id)
-        ic(args.password)
+        return
         # checkin_function()
 
     if args.command == 'show':
         if args.show_command == 'cases':
-            ic(args.show_command)
-            ic(args.password)
+            return
             # show_cases_function()
         if args.show_command == 'items':
-            ic(args.show_command)
-            ic(args.case_id)
-            ic(args.password)
+            return
             # show_items_function()
         if args.show_command == 'history': # Note: If optional args are not provided, they will be None
-            ic(args.show_command)
-            ic(args.case_id)
-            ic(args.item_id)
-            ic(args.num_entries)
-            ic(args.reverse)
-            ic(args.password)
+            return
             # show_history_function()
     
     if args.command == 'remove': # Note: If optional args are not provided, they will be None
-        ic(args.command)
-        ic(args.item_id)
-        ic(args.reason)
-        ic(args.password)
+        return
         # remove_function()
 
     if args.command == 'init':
-        ic(args.command)
+        # ic(args.command)
         init_function()
 
     if args.command == 'verify':
-        ic(args.command)
+        return
         # verify_function()
 
+# Check for File Path & if file present check for initial block If not :
+                                                                # Initialize the blockchain file with an initial block
 
 def init_function():
     if os.path.exists(filePath) and check_initial_block(filePath):
-        ic("File Exist and Initial Block is present")
         return True
     else: 
         Prev_hash = b''*32  # 32 bytes
@@ -192,8 +192,7 @@ def init_function():
 
 def init_load_blocks(filePath):
     if not os.path.exists(filePath) or not check_initial_block(filePath):
-        ic("File not found or Initial block not found. Creating new file.")
-        init_function()
+        init_function()  # Ensure this function is defined elsewhere
         return
 
     try:
@@ -203,23 +202,62 @@ def init_load_blocks(filePath):
                 if not hContent:
                     break
 
-                currentBlockHead = BlockHead(*hFormat.unpack(hContent))
-                ic('BlockData Length', currentBlockHead.length)
+                hash_val, timestamp, case_id, item_id, state, creator, owner, length = hFormat.unpack(hContent)
 
-                dFormat = struct.Struct(str(currentBlockHead.length) + 's')
+                # Convert bytes to string, handling decoding errors
+                try:
+                    hash_val = hash_val.decode('utf-8').strip('\x00')
+                    case_id = case_id.decode('utf-8').strip('\x00')
+                    item_id = item_id.decode('utf-8').strip('\x00')
+                    state = state.decode('utf-8').strip('\x00')
+                    creator = creator.decode('utf-8').strip('\x00')
+                    owner = owner.decode('utf-8').strip('\x00')
+                except UnicodeDecodeError:
+                    print("Decoding error occurred. Printing bytes as hexadecimal.")
+                    sys.exit(1)
+                
+                currentBlockHead = BlockHead(hash_val, timestamp, case_id, item_id, state, creator, owner, length)
+                #print_block_head(currentBlockHead)
+                
 
-                dataContent = fp.read(dFormat.size)
-                currentBlockData = BlockData(*dFormat.unpack(dataContent))
+                # Read data based on the length from the block head
+                dFormat = struct.Struct(f'{length}s')
+                dataContent = fp.read(length)
+                blockData = BlockData(*dFormat.unpack(dataContent))
+                add_block_to_maps(currentBlockHead, blockData)  # Ensure this function is defined elsewhere
 
-                add_block_to_maps(currentBlockHead, currentBlockData)
+                # Print the block head and block data
+                
+                #print_block_data(blockData)
 
-    except Exception as e:
-        print("An exception occurred:", e)
+    except FileNotFoundError:
+        print(f"File not found: {filePath}")
         sys.exit(1)
+    except struct.error as se:
+        print(f"Error unpacking struct: {se}")
+        sys.exit(1)
+    except Exception as e:
+        print(f"An exception occurred: {e}")
+        sys.exit(1)
+
+
+
 
 def add_block_to_maps(blockHead, blockData):
     case_id = blockHead.case_id
     item_id = blockHead.item_id
+    status = blockHead.state
+    
+    item_list = get_item_id_list(item_id)
+    if status == 'CHECKEDIN' and len(item_list) != 0:
+        print(f"Item ID {item_id} already exists in the blockchain.")
+        sys.exit(1)
+        return
+    
+    if len(item_list) > 1 and item_list[-1].state == status:
+        print(f"Item ID {item_id} already exists with similar status in the blockchain.")
+        sys.exit(1)
+        return
 
     if case_id not in blockHeadMap:
         blockHeadMap[case_id] = {}
@@ -234,7 +272,7 @@ def add_block_to_maps(blockHead, blockData):
 def check_initial_block(filePath):
     # Check if the file is large enough to contain both header and data
     if (hFormat.size + dFormat.size) > os.path.getsize(filePath):
-        print("Blockchain file is too small.")
+        sys.exit(1)
         return False
 
     with open(filePath, 'rb') as file:
@@ -266,57 +304,41 @@ def check_initial_block(filePath):
     
     print("\nBlockchain file does not contain the expected INITIAL block.")
     return False
-
-
-# def add_function(case_id, item_ids, creator, password, blockData , blockLen , toWrite):
-#     if  init_function():  
-#                            # Check if the file is initialized              
-#         if case_id not in blockHeadMap:
-#                 blockHeadMap[case_id] = {}
-#         for item_id in item_ids:
-#             if item_id not in blockHeadMap[case_id]:
-#                 timestamp = datetime.timestamp(datetime.now())
-#                 newBlockData = BlockData(blockData)
-#                 newBlock = BlockHead(None, timestamp , case_id, item_id, 'CHECKEDIN', creator, password, blockLen)
-
-#                 blockSequence.append(newBlock)
-#                 blockHeadMap[case_id][item_id] = []
-#                 blockHeadMap[case_id][item_id].append(newBlock)
-#                 blockDataMap[newBlock] = newBlockData
-#                 if toWrite:
-#                     pack_and_add_block(newBlock, newBlockData)
-#                 print("The Block has been added")
-#             else: 
-#                 print("Item ID already exists" , item_id)     
+ 
 
 def add_function(case_id, item_ids, creator, password, blockData, blockLen, toWrite):
-    print("Inside add_function")
     if init_function() == True:
         print(f"File initialized: {filePath}")
         if case_id not in blockHeadMap:
             print(f"Case ID {case_id} does not exist in blockHeadMap")
             blockHeadMap[case_id] = {}
         for item_id in item_ids:
-            if item_id not in blockHeadMap[case_id]:
-                timestamp = datetime.timestamp(datetime.now())
+            if len(get_item_id_list(item_id)) == 0:
+                timestamp = datetime.now().timestamp()
                 newBlockData = BlockData(blockData)
                 newBlock = BlockHead(None, timestamp, case_id, item_id, 'CHECKEDIN', creator, password, blockLen)
-
+                
                 blockSequence.append(newBlock)
                 blockHeadMap[case_id][item_id] = []
                 blockHeadMap[case_id][item_id].append(newBlock)
                 blockDataMap[newBlock] = newBlockData
 
+                if password not in password_map:
+                    print("> Invalid password")
+                    sys.exit(1)
+
                 if toWrite:
                     print("Writing block to file")
                     pack_and_add_block(newBlock, newBlockData)
-                
-                print("The Block has been added")
+
+                print_added_block(item_id, 'CHECKEDIN', timestamp)
             else:
-                print("Item ID already exists", item_id)            
+                print("Item ID already exists", item_id)
+                sys.exit(1)            
     else:
         print("File not initialized. Initiating new file.")
         add_function(case_id, item_ids, creator, password, blockData, blockLen, toWrite)
+
 
 def encrpty_data(data, password):
 
@@ -331,34 +353,55 @@ def encrpty_data(data, password):
     encrypted_hash = cipher.encrypt(hash_value)
 
     # Now, 'encrypted_hash' contains the hashed value of 'data' using AES ECB mode
-    print(encrypted_hash)
-
+    #print(encrypted_hash)
     return encrypted_hash
 
 def pack_and_add_block(blockhead, blockdata):
-
     timestamp = blockhead.timestamp
     hash_val = b'' if blockhead.hash is None else blockhead.hash
-    case_id_val = str(blockhead.case_id).encode('utf-8')
-    item_id_val = int(blockhead.item_id).to_bytes(4, byteorder='big')  # Assuming item_id is 4 bytes
-    state_val = blockhead.state.encode('utf-8')
-    creator_val = blockhead.creator.encode('utf-8')
-    owner_val = blockhead.owner.encode('utf-8')
+    case_id_val = str(blockhead.case_id).encode('utf-8').ljust(32, b'\0')  # Pad with null bytes to 32 bytes
+    item_id_val = str(blockhead.item_id).encode('utf-8').ljust(32, b'\0')  # Pad with null bytes to 32 bytes
+    state_val = blockhead.state.encode('utf-8').ljust(12, b'\0')  # Pad with null bytes to 12 bytes
+    creator_val = blockhead.creator.encode('utf-8').ljust(12, b'\0')  # Pad with null bytes to 12 bytes
+    owner_val = blockhead.owner.encode('utf-8').ljust(12, b'\0')  # Pad with null bytes to 12 bytes
     length_val = blockhead.length
     data_vals = blockdata.data.encode('utf-8')
-
-    # Define the format string
-    #hFormat = struct.Struct('32s d 16s I 12s 12s 12s I')
 
     # Pack the values
     packedHVals = hFormat.pack(
         hash_val, timestamp, case_id_val, item_id_val, state_val, creator_val, owner_val, length_val
     )
+    
     packedDataVals = data_vals  # No need to pack a single value
 
     with open(filePath, 'ab') as file:
         file.write(packedHVals)
         file.write(packedDataVals)
+
+def get_item_id_list(itemId):
+    item_id_list = []
+    for case_id in blockHeadMap.keys():
+        if itemId in blockHeadMap[case_id]:
+            item_id_list.append(itemId)
+    return item_id_list
+
+# Printing Tasks
+
+def print_block_head(blockHead):
+    print("Block Head:")
+    print(f"  Hash: {blockHead.hash}")
+    print(f"  Timestamp: {blockHead.timestamp}")
+    print(f"  Case ID: {blockHead.case_id}")
+    print(f"  Item ID: {blockHead.item_id}")
+    print(f"  State: {blockHead.state}")
+    print(f"  Creator: {blockHead.creator}")
+    print(f"  Owner: {blockHead.owner}")
+    print(f"  Length: {blockHead.length}")
+
+def print_block_data(blockData):
+    print("Block Data:")
+    print(f"  Data: {blockData.data.decode('utf-8')}")
+
 
 def print_block_info():
     print("blockHeadMap:")
@@ -378,6 +421,14 @@ def print_block_info():
     for block in blockSequence:
         print(block)
 
+# Block Added Successfully
+
+def print_added_block(item_id, status, time_of_action):
+    formatted_time = datetime.utcfromtimestamp(time_of_action).strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z'
+    print(f"stdout from your program:")
+    print(f"> Added item: {item_id}")
+    print(f"> Status: {status}")
+    print(f"> Time of action: {formatted_time} \n")
 
 if __name__ == "__main__":
     main()
