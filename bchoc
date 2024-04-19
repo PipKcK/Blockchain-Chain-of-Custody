@@ -135,7 +135,7 @@ def main():
         # remove_function()
 
     if args.command == 'init':
-        INIT.init(filePath)
+        INIT.init()
         sys.exit(0)
         # ic(args.command)
         # init_function()

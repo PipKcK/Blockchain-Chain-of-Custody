@@ -13,6 +13,7 @@ def add(case_id , item_ids, creator, password):
 
     for item_id in item_ids:
         add_new_block(case_id, item_id, creator, password)
+    UTIL.unpack_all_blockHead_blockData()
     sys.exit(0)
 
 
@@ -45,9 +46,6 @@ def check_password(password):
     if password not in CONS.PASSWORD_MAP:
         print("Error: Invalid password")
         sys.exit(1)
-
-
-
 
 
 def input_validation(case_id, item_id, creator, password):
