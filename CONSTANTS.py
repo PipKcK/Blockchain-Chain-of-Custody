@@ -15,6 +15,8 @@ D_FORMAT = struct.Struct('14s')
 
 filePath = "/Users/sidpro/Desktop/CSE 469/Final Project/Blockchain-Chain-of-Custody/BlockChain.bin"
 
+AES_KEY = b'R0chLi4uLi4uLi4='
+
 class BlockHead:
     def __init__(self, prevHash, timestamp, case_id, item_id, state, creator, owner, length):
         self.prevHash = prevHash

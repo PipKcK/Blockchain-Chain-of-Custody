@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 import sys
-
 import os
 
 from datetime import datetime
@@ -25,13 +24,13 @@ def add_new_block(case_id , item_id, creator, password):
         sys.exit(1)
 
     # Create a New Block Head
-    prevHash = b'0'
+    prevHash = b''
     timestamp = datetime.now().timestamp()
     state = b'CHECKEDIN'
-    owner = creator
+    owner = b''
     length = 0
     
-    block_head = CONS.BlockHead(prevHash, timestamp, case_id, item_id[0], state, creator, owner, length)
+    block_head = CONS.BlockHead(prevHash, timestamp, case_id, item_id, state, creator, owner, length)
     block_data = CONS.BlockData(b'')
     UTIL.pack_and_write_block(block_head, block_data)
 
