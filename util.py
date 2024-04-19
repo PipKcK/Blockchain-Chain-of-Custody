@@ -31,6 +31,13 @@ def pack_and_write_block(block_head, block_data):
         file.write(block_data_packed)
 
 def get_last_block_with_item_id(item_id):
+    blocks_list = unpack_all_blockHead_blockData()
+    # Iterate over the blocks_list in reverse order
+    for block_head, block_data in reversed(blocks_list):
+        if block_head.item_id == aes_ecb_encrypt(int(item_id)):
+            return block_head, block_data
+    
+    # Return None if no block with the given item_id is found
     return None
 
 
@@ -63,6 +70,7 @@ def aes_ecb_encrypt(data_bytes):
     return binascii.hexlify(encrypted_data).decode('utf-8')[:32]
 
 def unpack_all_blockHead_blockData():
+    blocks = []
     try:
         with open(CONS.filePath, 'rb') as fp:
             while True:
@@ -75,17 +83,31 @@ def unpack_all_blockHead_blockData():
                 dFormat = struct.Struct(f'{length}s')
                 dataContent = fp.read(length)
 
+                try:
+                    hash_val = hash_val.decode('utf-8').strip('\x00')
+                    case_id = case_id.decode('utf-8').strip('\x00')
+                    item_id = item_id.decode('utf-8').strip('\x00')
+                    state = state.decode('utf-8').strip('\x00')
+                    creator = creator.decode('utf-8').strip('\x00')
+                    owner = owner.decode('utf-8').strip('\x00')
+                except UnicodeDecodeError:
+                    print("Decoding error occurred. Printing bytes as hexadecimal.")
+                    sys.exit(1)
+                
                 # Check if we read enough data
                 if len(dataContent) < length:
                     print(f"Expected {length} bytes, but got {len(dataContent)} bytes.")
+                    sys.exit(1)
                     break
 
                 # Creating Block Object
                 blockData = CONS.BlockData(*dFormat.unpack(dataContent))
                 currentBlockHead = CONS.BlockHead(hash_val, timestamp, case_id, item_id, state, creator, owner, length)
-
-                print_block_head(currentBlockHead)
-                print_block_data(blockData)
+                blocks.append((currentBlockHead, blockData))
+                #print_block_head(currentBlockHead)
+                #print_block_data(blockData)
+        
+        return blocks
 
     except FileNotFoundError:
         print(f"File not found: {CONS.filePath}")
@@ -96,8 +118,6 @@ def unpack_all_blockHead_blockData():
     except Exception as e:
         print(f"An exception occurred: {e}")
         sys.exit(1)
-
-
 
 def print_block_head(blockHead):
     print("Block Head:")
