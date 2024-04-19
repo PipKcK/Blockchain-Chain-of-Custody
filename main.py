@@ -1,7 +1,12 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import argparse
-from icecream import ic
+import sys
+import os
+import init
+import init
+
+# from icecream import ic
 
 #Authors: ZebraCatPenguin: Ujjwal, Wejdan
 
@@ -18,7 +23,6 @@ from icecream import ic
 def main():
 
     parser = argparse.ArgumentParser(prog='main')
-
     subparsers = parser.add_subparsers(dest='command')
 
     #bchoc add -c case_id -i item_id [-i item_id ...] -c creator -p password(creator’s)
@@ -76,60 +80,73 @@ def main():
     args = parser.parse_args()
 
     if args.command == 'add':
-        ic(args.command)
-        ic(args.case_id)
-        ic(args.item_id)
-        ic(args.creator)
-        ic(args.password)
-
+        # ic(args.command)
+        # ic(args.case_id)
+        # ic(args.item_id)
+        # ic(args.creator)
+        # ic(args.password)
+        sys.exit(1)
         # add_function()
 
     if args.command == 'checkout':
-        ic(args.command)
-        ic(args.item_id)
-        ic(args.password)
+        sys.exit(1)
+        # ic(args.command)
+        # ic(args.item_id)
+        # ic(args.password)
         # checkout_function()
 
     if args.command == 'checkin':
-        ic(args.command)
-        ic(args.item_id)
-        ic(args.password)
+        sys.exit(1)
+        # ic(args.command)
+        # ic(args.item_id)
+        # ic(args.password)
         # checkin_function()
 
     if args.command == 'show':
         if args.show_command == 'cases':
-            ic(args.show_command)
-            ic(args.password)
+            sys.exit(1)
+            # ic(args.show_command)
+            # ic(args.password)
             # show_cases_function()
         if args.show_command == 'items':
-            ic(args.show_command)
-            ic(args.case_id)
-            ic(args.password)
+            sys.exit(1)
+            # ic(args.show_command)
+            # ic(args.case_id)
+            # ic(args.password)
             # show_items_function()
         if args.show_command == 'history': # Note: If optional args are not provided, they will be None
-            ic(args.show_command)
-            ic(args.case_id)
-            ic(args.item_id)
-            ic(args.num_entries)
-            ic(args.reverse)
-            ic(args.password)
+            sys.exit(1)
+            # ic(args.show_command)
+            # ic(args.case_id)
+            # ic(args.item_id)
+            # ic(args.num_entries)
+            # ic(args.reverse)
+            # ic(args.password)
             # show_history_function()
     
     if args.command == 'remove': # Note: If optional args are not provided, they will be None
-        ic(args.command)
-        ic(args.item_id)
-        ic(args.reason)
-        ic(args.password)
+        sys.exit(1)
+        # ic(args.command)
+        # ic(args.item_id)
+        # ic(args.reason)
+        # ic(args.password)
         # remove_function()
 
     if args.command == 'init':
-        ic(args.command)
+        init.init(filePath)
+        sys.exit(0)
+        # ic(args.command)
         # init_function()
 
     if args.command == 'verify':
-        ic(args.command)
+        sys.exit(1)
+        # ic(args.command)
         # verify_function()
 
 
 if __name__ == "__main__":
+    blockchain_file_path = os.getenv('BCHOC_FILE_PATH')
+    if blockchain_file_path:
+        global filePath
+        filePath = blockchain_file_path
     main()
