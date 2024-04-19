@@ -3,8 +3,11 @@
 import argparse
 import sys
 import os
-import init
-import init
+
+import init as INIT
+import CONSTANTS as CONS
+import add as ADD
+
 
 # from icecream import ic
 
@@ -29,7 +32,7 @@ def main():
     parser_add = subparsers.add_parser('add')
     parser_add.add_argument('-c', '--case_id', required=True, help='Case ID')
     parser_add.add_argument('-i', '--item_id', action='append', required=True, help='Item ID')
-    parser_add.add_argument('-C', '--creator', required=True, help='Creator')
+    parser_add.add_argument('-g', '--creator', required=True, help='Creator')
     parser_add.add_argument('-p', '--password', required=True, help='Password')
 
     #bchoc checkout -i item_id -p password
@@ -80,13 +83,12 @@ def main():
     args = parser.parse_args()
 
     if args.command == 'add':
+        ADD.add(args.case_id, args.item_id, args.creator, args.password)
         # ic(args.command)
         # ic(args.case_id)
         # ic(args.item_id)
         # ic(args.creator)
         # ic(args.password)
-        sys.exit(1)
-        # add_function()
 
     if args.command == 'checkout':
         sys.exit(1)
@@ -133,7 +135,7 @@ def main():
         # remove_function()
 
     if args.command == 'init':
-        init.init(filePath)
+        INIT.init()
         sys.exit(0)
         # ic(args.command)
         # init_function()
@@ -147,6 +149,5 @@ def main():
 if __name__ == "__main__":
     blockchain_file_path = os.getenv('BCHOC_FILE_PATH')
     if blockchain_file_path:
-        global filePath
-        filePath = blockchain_file_path
+        CONS.filePath = blockchain_file_path
     main()

@@ -10,11 +10,14 @@ PASSWORD_MAP = {
 }
 
 H_FORMAT = struct.Struct('32s d 32s 32s 12s 12s 12s I')
+
 D_FORMAT = struct.Struct('14s')
 
+filePath = "/Users/sidpro/Desktop/CSE 469/Final Project/Blockchain-Chain-of-Custody/BlockChain.bin"
+
 class BlockHead:
-    def __init__(self, hash, timestamp, case_id, item_id, state, creator, owner, length):
-        self.hash = hash
+    def __init__(self, prevHash, timestamp, case_id, item_id, state, creator, owner, length):
+        self.prevHash = prevHash
         self.timestamp = timestamp
         self.case_id = case_id
         self.item_id = item_id

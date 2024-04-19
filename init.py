@@ -5,8 +5,8 @@ import sys
 import CONSTANTS as CONS
 import os
 
-def init(filePath):
-    if os.path.exists(filePath) and check_initial_block(filePath):
+def init():
+    if os.path.exists(CONS.filePath) and check_initial_block(CONS.filePath):
         return True
     else: 
         Prev_hash = b''*32  # 32 bytes
@@ -22,7 +22,7 @@ def init(filePath):
         packedHVals = CONS.H_FORMAT.pack(Prev_hash, Timestamp, Case_id, Evidence_id, State, creator, owner, D_length)
         packedDataVals = CONS.D_FORMAT.pack(Data)
 
-        with open(filePath, 'wb') as file:
+        with open(CONS.filePath, 'wb') as file:
             file.write(packedHVals)
             file.write(packedDataVals)
             file.close()
@@ -48,7 +48,7 @@ def check_initial_block(filePath):
     expected_block_data = CONS.BlockData(b'Initial block\0')
     
     if (
-        actual_block_head.hash == expected_block_head.hash and
+        actual_block_head.prevHash == expected_block_head.prevHash and
         actual_block_head.timestamp == expected_block_head.timestamp and
         actual_block_head.case_id == expected_block_head.case_id and
         actual_block_head.item_id == expected_block_head.item_id and
