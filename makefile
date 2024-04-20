@@ -4,6 +4,5 @@ all:
 	rm -f BlockChain.bin
 	clear
 	./bchoc init
-	./bchoc add -c 93a3e215-5b71-4175-8411-d9374cc3e663 -i 2608608139 -i 3796006652 -i 2539237045 -i 1875275885 -i 349322093 -i 649233882 -g P9PhI6UttXc1 -p C67C
-
+	./bchoc add -c 77f50a62-d198-43a1-81ac-dffbff88308a -i 2775647613 -i 3668088400 -i 2392419778 -i 3402671448 -i 2758133383 -g GoWlApWMnBSY -p C67C
 	

@@ -25,27 +25,22 @@ def add_new_block(case_id , item_id, creator, password):
         sys.exit(1)
 
     # Create a New Block Head
-    prevHash = b''
+    prevHash = ""
     timestamp = datetime.now().timestamp()
-    state = b'CHECKEDIN'
-    owner = b''
+    state = "CHECKEDIN"
+    owner = ""
     length = 0
     
     block_head = CONS.BlockHead(prevHash, timestamp, case_id, item_id, state, creator, owner, length)
-    block_data = CONS.BlockData(b'')
+    block_data = CONS.BlockData("")
     UTIL.pack_and_write_block(block_head, block_data)
 
 
 def pre_check(case_id , item_id, creator, password):
     input_validation(case_id, item_id, creator, password)
     INIT.init()
-    check_password(password)
+    UTIL.check_password(password)
 
-
-def check_password(password):
-    if password not in CONS.PASSWORD_MAP:
-        print("Error: Invalid password")
-        sys.exit(1)
 
 
 def input_validation(case_id, item_id, creator, password):

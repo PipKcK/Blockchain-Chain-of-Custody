@@ -7,6 +7,7 @@ import os
 import init as INIT
 import CONSTANTS as CONS
 import add as ADD
+import checkout as CHECKOUT
 
 
 # from icecream import ic
@@ -91,11 +92,11 @@ def main():
         # ic(args.password)
 
     if args.command == 'checkout':
-        sys.exit(1)
         # ic(args.command)
         # ic(args.item_id)
         # ic(args.password)
-        # checkout_function()
+        #CHECKOUT.checkout(args.item_id, args.password)
+        sys.exit(1)
 
     if args.command == 'checkin':
         sys.exit(1)

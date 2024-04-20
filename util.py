@@ -1,30 +1,36 @@
 #!/usr/bin/env python3
 
 import CONSTANTS as CONS
+import encryption as AES
+import util as UTIL
+
 import struct
-from Crypto.Cipher import AES
-from Crypto.Hash import SHA256
-import binascii
-import base64
 import uuid
 import sys
+from datetime import datetime
+import hashlib
 
-def pack_and_write_block(block_head, block_data):
 
+def pack_block(block_head, block_data):
     block_head_packed = CONS.H_FORMAT.pack(
-        block_head.prevHash.ljust(32, b'\0'),  # Pad with null bytes
+        block_head.prevHash.encode('utf-8').ljust(32, b'\0'),  # Pad with null bytes
         block_head.timestamp,
-        aes_ecb_encrypt(uuid.UUID(block_head.case_id).int).encode('utf-8').ljust(32, b'\0'),  # Pad with null bytes
-        aes_ecb_encrypt(int(block_head.item_id)).encode('utf-8').ljust(32, b'\0'),  # Pad with null bytes
-        block_head.state.ljust(12, b'\0'),  # Pad with null bytes
+        AES.aes_ecb_encrypt(uuid.UUID(block_head.case_id).int).encode('utf-8').ljust(32, b'\0'),  # Pad with null bytes
+        AES.aes_ecb_encrypt(int(block_head.item_id)).encode('utf-8').ljust(32, b'\0'),  # Pad with null bytes
+        block_head.state.encode('utf-8').ljust(12, b'\0'),  # Pad with null bytes
         block_head.creator.encode('utf-8').ljust(12, b'\0'),  # Pad with null bytes
-        block_head.owner.ljust(12, b'\0'),  # Pad with null bytes
+        block_head.owner.encode('utf-8').ljust(12, b'\0'),  # Pad with null bytes
         block_head.length
     )
+
     dFormat = struct.Struct(f'{block_head.length}s')
     # Pack Block Data
-    block_data_packed = dFormat.pack(block_data.data)
+    block_data_packed = dFormat.pack(block_data.data.encode('utf-8'))
+    return block_head_packed, block_data_packed
 
+def pack_and_write_block(block_head, block_data):
+    
+    block_head_packed, block_data_packed = pack_block(block_head, block_data)
     # Write to File
     with open(CONS.filePath, 'ab') as file:
         file.write(block_head_packed)
@@ -34,40 +40,10 @@ def get_last_block_with_item_id(item_id):
     blocks_list = unpack_all_blockHead_blockData()
     # Iterate over the blocks_list in reverse order
     for block_head, block_data in reversed(blocks_list):
-        if block_head.item_id == aes_ecb_encrypt(int(item_id)):
+        if block_head.item_id == item_id:
             return block_head, block_data
-    
     # Return None if no block with the given item_id is found
     return None
-
-
-def aes_ecb_encrypt(data_bytes):
-    """
-    Encrypts data using AES encryption in ECB mode and returns the result in ASCII hexadecimal format.
-    
-    Args:
-    data_bytes (bytes): The data to encrypt in bytes.
-    key (bytes): The AES key for encryption. Must be either 16, 24, or 32 bytes long.
-
-    Returns:
-    str: The encrypted data in ASCII hexadecimal format.
-    """
-    data_bytes = data_bytes.to_bytes(16, byteorder='big')
-
-    # Ensure the data is a multiple of AES block size
-    block_size = AES.block_size
-    pad_len = block_size - (len(data_bytes) % block_size)
-    padding = bytes([pad_len] * pad_len)
-    data_padded = data_bytes + padding
-
-    # Create an AES cipher object using ECB mode
-    cipher = AES.new(CONS.AES_KEY, AES.MODE_ECB)
-
-    # Encrypt the data
-    encrypted_data = cipher.encrypt(data_padded)
-
-    # Convert encrypted data to ASCII hexadecimal and return
-    return binascii.hexlify(encrypted_data).decode('utf-8')[:32]
 
 def unpack_all_blockHead_blockData():
     blocks = []
@@ -93,7 +69,14 @@ def unpack_all_blockHead_blockData():
                 except UnicodeDecodeError:
                     print("Decoding error occurred. Printing bytes as hexadecimal.")
                     sys.exit(1)
-                
+
+                try:
+                    case_id = AES.aes_ecb_decrypt(case_id, False)
+                    item_id = AES.aes_ecb_decrypt(item_id, True)
+                except UnicodeDecodeError:
+                    print("Failed to decrypt case_id or item_id. Exiting.")
+                    sys.exit(1)
+
                 # Check if we read enough data
                 if len(dataContent) < length:
                     print(f"Expected {length} bytes, but got {len(dataContent)} bytes.")
@@ -104,8 +87,8 @@ def unpack_all_blockHead_blockData():
                 blockData = CONS.BlockData(*dFormat.unpack(dataContent))
                 currentBlockHead = CONS.BlockHead(hash_val, timestamp, case_id, item_id, state, creator, owner, length)
                 blocks.append((currentBlockHead, blockData))
-                #print_block_head(currentBlockHead)
-                #print_block_data(blockData)
+                # print_block_head(currentBlockHead)
+                # print_block_data(blockData)
         
         return blocks
 
@@ -118,6 +101,38 @@ def unpack_all_blockHead_blockData():
     except Exception as e:
         print(f"An exception occurred: {e}")
         sys.exit(1)
+
+
+def check_password(password):
+    if password not in CONS.PASSWORD_MAP:
+        print("Error: Invalid password")
+        sys.exit(1)
+
+def change_status_and_add_block(item_id, new_state):
+    last_block_pair = get_last_block_with_item_id(item_id)
+    last_block_head = last_block_pair[0]
+    last_block_data = last_block_pair[1]
+
+    packed_last_block_head = CONS.H_FORMAT.pack(last_block_head.prevHash, last_block_head.timestamp, last_block_head.case_id, last_block_head.item_id, last_block_head.state, last_block_head.creator, last_block_head.owner, last_block_head.length)
+    packed_last_block_data = CONS.D_FORMAT.pack(last_block_data.data)
+
+
+    last_block_hash_hex = hashlib.sha256(packed_last_block_head + packed_last_block_data).digest()
+
+    new_block_head = CONS.BlockHead(
+        last_block_hash_hex,
+        datetime.now().timestamp(),
+        last_block_head.case_id,
+        last_block_head.item_id,
+        new_state,
+        last_block_head.creator,
+        last_block_head.owner,
+        last_block_head.length
+    )
+
+    new_block_data = CONS.BlockData(last_block_data.data)
+    UTIL.pack_and_write_block(new_block_head, new_block_data)
+
 
 def print_block_head(blockHead):
     print("Block Head:")
@@ -133,3 +148,5 @@ def print_block_head(blockHead):
 def print_block_data(blockData):
     print("Block Data:")
     print(f"  Data: {blockData.data.decode('utf-8')}")
+
+
