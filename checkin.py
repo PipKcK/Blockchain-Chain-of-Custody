@@ -7,7 +7,7 @@ import sys
 def checkin(item_id, password):
     pre_condition(item_id, password)
     
-    UTIL.change_status_and_add_block(item_id, "CHECKEDIN")
+    UTIL.change_status_and_add_block(item_id, "CHECKEDIN", CONS.PASSWORD_MAP[password])
     sys.exit(0)
     # Pre Condition Verified , Item Ready for Checkout
 
