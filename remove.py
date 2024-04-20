@@ -5,7 +5,7 @@ import sys
 
 
 def remove(item_id, password, reason):
-    owner = pre_condition(item_id, password)
+    owner = pre_condition(item_id, password, reason)
     UTIL.change_status_and_add_block(item_id, reason, owner)
     sys.exit(0)
 
@@ -19,7 +19,12 @@ def check_creator_password(item_id, password):
         print("Error: Invalid password")
         sys.exit(1)
 
-def pre_condition(item_id, password):
+def pre_condition(item_id, password, reason):
+
+    if reason not in CONS.REMOVE_REASON_MAP:
+        print("Error: Invalid reason")
+        sys.exit(1)
+
     last_block_pair_with_item_id = UTIL.get_last_block_with_item_id(item_id)
 
     if last_block_pair_with_item_id is None:

@@ -9,6 +9,10 @@ PASSWORD_MAP = {
     "C67C": "CREATOR"
 }
 
+REMOVE_REASON_MAP = { "DESTROYED" ,"DISPOSED", "RELEASED" }
+
+CASES_MAP = {}
+
 H_FORMAT = struct.Struct('32s d 32s 32s 12s 12s 12s I')
 
 D_FORMAT = struct.Struct('14s')

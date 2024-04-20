@@ -61,6 +61,15 @@ def unpack_all_blockHead_blockData():
                 dFormat = struct.Struct(f'{length}s')
                 dataContent = fp.read(length)
 
+                # print(f"hash_val: (type: {type(hash_val)}, len: {len(hash_val)}, value: {hash_val})")
+                # print(f"timestamp: (type: {type(timestamp)}, len: {struct.calcsize('I')}, value: {timestamp})")
+                # print(f"case_id: (type: {type(case_id)}, len: {struct.calcsize('I')}, value: {case_id})")
+                # print(f"item_id: (type: {type(item_id)}, len: {len(item_id)}, value: {item_id})")
+                # print(f"state: (type: {type(state)}, len: {struct.calcsize('256s')}, value: {state.decode()})")
+                # print(f"creator: (type: {type(creator)}, len: {struct.calcsize('256s')}, value: {creator.decode()})")
+                # print(f"owner: (type: {type(owner)}, len: {struct.calcsize('256s')}, value: {owner.decode()})")
+                # print(f"length: (type: {type(length)}, len: {struct.calcsize('I')}, value: {length})")
+
                 try:
                     hash_val = hash_val.decode('utf-8').strip('\x00').encode('utf-8')
                     case_id = case_id.decode('utf-8').strip('\x00')

@@ -9,6 +9,7 @@ import CONSTANTS as CONS
 import add as ADD
 import checkout as CHECKOUT
 import checkin as CHECKIN
+import remove as REMOVE
 
 
 # from icecream import ic
@@ -73,7 +74,7 @@ def main():
     #bchoc remove -i item_id -y reason -p password(creator’s)
     parser_remove = subparsers.add_parser('remove')
     parser_remove.add_argument('-i', '--item_id', required=True, help='Item ID')
-    parser_remove.add_argument('-y', '--reason', required=True, help='Reason')
+    parser_remove.add_argument('-y', '--why', required=True, help='Reason')
     parser_remove.add_argument('-p', '--password', required=True, help='Password')
 
     # bchoc init
@@ -108,7 +109,7 @@ def main():
 
     if args.command == 'show':
         if args.show_command == 'cases':
-            sys.exit(1)
+            sys.exit(0)
             # ic(args.show_command)
             # ic(args.password)
             # show_cases_function()
@@ -129,7 +130,7 @@ def main():
             # show_history_function()
     
     if args.command == 'remove': # Note: If optional args are not provided, they will be None
-        sys.exit(1)
+        REMOVE.remove(args.item_id, args.password, args.why)
         # ic(args.command)
         # ic(args.item_id)
         # ic(args.reason)
