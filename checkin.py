@@ -4,10 +4,10 @@ import util as UTIL
 import sys
 
 
-def checkout(item_id, password):
+def checkin(item_id, password):
     pre_condition(item_id, password)
-
-    UTIL.change_status_and_add_block(item_id, "CHECKEDOUT", CONS.PASSWORD_MAP[password])
+    
+    UTIL.change_status_and_add_block(item_id, "CHECKEDIN", "")
     sys.exit(0)
     # Pre Condition Verified , Item Ready for Checkout
 
@@ -21,7 +21,7 @@ def pre_condition(item_id, password):
     
     blockHead_with_item_id = last_block_pair_with_item_id[0]
 
-    if blockHead_with_item_id.state != "CHECKEDIN":
+    if blockHead_with_item_id.state != "CHECKEDOUT":
         print("Error: Item ID is not in CHECKEDIN state, CHECKOUT failed for Item ID: ", item_id)
         sys.exit(1)
 

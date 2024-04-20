@@ -2,11 +2,11 @@
 import struct
 
 PASSWORD_MAP = {
-    "P80P": "BCHOC_PASSWORD_POLICE",
-    "L76L": "BCHOC_PASSWORD_LAWYER",
-    "A65A": "BCHOC_PASSWORD_ANALYST",
-    "E69E": "BCHOC_PASSWORD_EXECUTIVE",
-    "C67C": "BCHOC_PASSWORD_CREATOR"
+    "P80P": "POLICE",
+    "L76L": "LAWYER",
+    "A65A": "ANALYST",
+    "E69E": "EXECUTIVE",
+    "C67C": "CREATOR"
 }
 
 H_FORMAT = struct.Struct('32s d 32s 32s 12s 12s 12s I')

@@ -8,6 +8,7 @@ import init as INIT
 import CONSTANTS as CONS
 import add as ADD
 import checkout as CHECKOUT
+import checkin as CHECKIN
 
 
 # from icecream import ic
@@ -95,11 +96,11 @@ def main():
         # ic(args.command)
         # ic(args.item_id)
         # ic(args.password)
-        #CHECKOUT.checkout(args.item_id, args.password)
-        sys.exit(1)
+        CHECKOUT.checkout(args.item_id, args.password)
+        #sys.exit(1)
 
     if args.command == 'checkin':
-        sys.exit(1)
+        CHECKIN.checkin(args.item_id, args.password)
         # ic(args.command)
         # ic(args.item_id)
         # ic(args.password)

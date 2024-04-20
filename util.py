@@ -9,11 +9,13 @@ import uuid
 import sys
 from datetime import datetime
 import hashlib
+import binascii
 
 
 def pack_block(block_head, block_data):
+
     block_head_packed = CONS.H_FORMAT.pack(
-        block_head.prevHash.encode('utf-8').ljust(32, b'\0'),  # Pad with null bytes
+        block_head.prevHash.ljust(32, b'\0'),  # Pad with null bytes
         block_head.timestamp,
         AES.aes_ecb_encrypt(uuid.UUID(block_head.case_id).int).encode('utf-8').ljust(32, b'\0'),  # Pad with null bytes
         AES.aes_ecb_encrypt(int(block_head.item_id)).encode('utf-8').ljust(32, b'\0'),  # Pad with null bytes
@@ -59,15 +61,23 @@ def unpack_all_blockHead_blockData():
                 dFormat = struct.Struct(f'{length}s')
                 dataContent = fp.read(length)
 
+                # print("CREATOR ====== ", creator)
+                # print("OWNER ====== ", owner)
+                # print("STATE ====== ", state)
+
                 try:
-                    hash_val = hash_val.decode('utf-8').strip('\x00')
+                    hash_val = hash_val.decode('utf-8').strip('\x00').encode('utf-8')
                     case_id = case_id.decode('utf-8').strip('\x00')
                     item_id = item_id.decode('utf-8').strip('\x00')
                     state = state.decode('utf-8').strip('\x00')
                     creator = creator.decode('utf-8').strip('\x00')
                     owner = owner.decode('utf-8').strip('\x00')
-                except UnicodeDecodeError:
-                    print("Decoding error occurred. Printing bytes as hexadecimal.")
+                except UnicodeDecodeError as e:
+                    print(f"Decoding error occurred: {e}. Printing bytes as hexadecimal.")
+                    # print("CREATOR =====" , creator.decode('utf-8'))
+                    # print("OWNER =====" , owner.decode('utf-8'))
+                    # print("STATE =====" , state.decode('utf-8'))
+
                     sys.exit(1)
 
                 try:
@@ -85,10 +95,12 @@ def unpack_all_blockHead_blockData():
 
                 # Creating Block Object
                 blockData = CONS.BlockData(*dFormat.unpack(dataContent))
+                blockData.data = blockData.data.decode('utf-8')
+
                 currentBlockHead = CONS.BlockHead(hash_val, timestamp, case_id, item_id, state, creator, owner, length)
                 blocks.append((currentBlockHead, blockData))
-                # print_block_head(currentBlockHead)
-                # print_block_data(blockData)
+                print_block_head(currentBlockHead)
+                print_block_data(blockData)
         
         return blocks
 
@@ -108,29 +120,30 @@ def check_password(password):
         print("Error: Invalid password")
         sys.exit(1)
 
-def change_status_and_add_block(item_id, new_state):
+def change_status_and_add_block(item_id, new_state, owner):
     last_block_pair = get_last_block_with_item_id(item_id)
     last_block_head = last_block_pair[0]
     last_block_data = last_block_pair[1]
 
-    packed_last_block_head = CONS.H_FORMAT.pack(last_block_head.prevHash, last_block_head.timestamp, last_block_head.case_id, last_block_head.item_id, last_block_head.state, last_block_head.creator, last_block_head.owner, last_block_head.length)
-    packed_last_block_data = CONS.D_FORMAT.pack(last_block_data.data)
+    #packed_last_block_head = CONS.H_FORMAT.pack(last_block_head.prevHash, last_block_head.timestamp, last_block_head.case_id, last_block_head.item_id, last_block_head.state, last_block_head.creator, last_block_head.owner, last_block_head.length)
+    #packed_last_block_data = CONS.D_FORMAT.pack(last_block_data.data)
 
-
-    last_block_hash_hex = hashlib.sha256(packed_last_block_head + packed_last_block_data).digest()
-
+    packed_last_block_head , packed_last_block_data = pack_block(last_block_head, last_block_data)
+    last_block_hex = hashlib.sha256(packed_last_block_head + packed_last_block_data).digest()
+    
     new_block_head = CONS.BlockHead(
-        last_block_hash_hex,
+        last_block_hex,
         datetime.now().timestamp(),
         last_block_head.case_id,
         last_block_head.item_id,
         new_state,
         last_block_head.creator,
-        last_block_head.owner,
+        owner,
         last_block_head.length
     )
 
     new_block_data = CONS.BlockData(last_block_data.data)
+
     UTIL.pack_and_write_block(new_block_head, new_block_data)
 
 

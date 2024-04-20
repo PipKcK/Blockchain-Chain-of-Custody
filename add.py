@@ -25,7 +25,7 @@ def add_new_block(case_id , item_id, creator, password):
         sys.exit(1)
 
     # Create a New Block Head
-    prevHash = ""
+    prevHash = b''
     timestamp = datetime.now().timestamp()
     state = "CHECKEDIN"
     owner = ""
