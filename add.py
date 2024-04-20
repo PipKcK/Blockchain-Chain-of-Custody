@@ -14,6 +14,7 @@ def add(case_id , item_ids, creator, password):
     for item_id in item_ids:
         add_new_block(case_id, item_id, creator, password)
     UTIL.unpack_all_blockHead_blockData()
+    CONS.ITEM_ID_TO_PASSWORD_MAP[item_id] = password
     sys.exit(0)
 
 

@@ -9,6 +9,7 @@ import CONSTANTS as CONS
 import add as ADD
 import checkout as CHECKOUT
 import checkin as CHECKIN
+import remove as REMOVE
 
 
 # from icecream import ic
@@ -129,7 +130,7 @@ def main():
             # show_history_function()
     
     if args.command == 'remove': # Note: If optional args are not provided, they will be None
-        sys.exit(1)
+        REMOVE.remove(args.item_id, args.password, args.reason)
         # ic(args.command)
         # ic(args.item_id)
         # ic(args.reason)

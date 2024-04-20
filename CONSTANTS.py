@@ -17,6 +17,8 @@ filePath = "/Users/sidpro/Desktop/CSE 469/Final Project/Blockchain-Chain-of-Cust
 
 AES_KEY = b'R0chLi4uLi4uLi4='
 
+ITEM_ID_TO_PASSWORD_MAP = {}
+
 class BlockHead:
     def __init__(self, prevHash, timestamp, case_id, item_id, state, creator, owner, length):
         self.prevHash = prevHash
