@@ -61,10 +61,6 @@ def unpack_all_blockHead_blockData():
                 dFormat = struct.Struct(f'{length}s')
                 dataContent = fp.read(length)
 
-                # print("CREATOR ====== ", creator)
-                # print("OWNER ====== ", owner)
-                # print("STATE ====== ", state)
-
                 try:
                     hash_val = hash_val.decode('utf-8').strip('\x00').encode('utf-8')
                     case_id = case_id.decode('utf-8').strip('\x00')
@@ -72,12 +68,8 @@ def unpack_all_blockHead_blockData():
                     state = state.decode('utf-8').strip('\x00')
                     creator = creator.decode('utf-8').strip('\x00')
                     owner = owner.decode('utf-8').strip('\x00')
-                except UnicodeDecodeError as e:
-                    print(f"Decoding error occurred: {e}. Printing bytes as hexadecimal.")
-                    # print("CREATOR =====" , creator.decode('utf-8'))
-                    # print("OWNER =====" , owner.decode('utf-8'))
-                    # print("STATE =====" , state.decode('utf-8'))
-
+                except UnicodeDecodeError:
+                    print("Decoding error occurred. Printing bytes as hexadecimal.")
                     sys.exit(1)
 
                 try:
@@ -99,8 +91,8 @@ def unpack_all_blockHead_blockData():
 
                 currentBlockHead = CONS.BlockHead(hash_val, timestamp, case_id, item_id, state, creator, owner, length)
                 blocks.append((currentBlockHead, blockData))
-                print_block_head(currentBlockHead)
-                print_block_data(blockData)
+                # print_block_head(currentBlockHead)
+                # print_block_data(blockData)
         
         return blocks
 
