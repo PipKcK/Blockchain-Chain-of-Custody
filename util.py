@@ -71,7 +71,7 @@ def unpack_all_blockHead_blockData():
                 # print(f"length: (type: {type(length)}, len: {struct.calcsize('I')}, value: {length})")
 
                 try:
-                    hash_val = hash_val.decode('utf-8').strip('\x00').encode('utf-8')
+                    #hash_val = hash_val.decode('utf-8').strip('\x00').encode('utf-8')
                     case_id = case_id.decode('utf-8').strip('\x00')
                     item_id = item_id.decode('utf-8').strip('\x00')
                     state = state.decode('utf-8').strip('\x00')
@@ -139,7 +139,7 @@ def change_status_and_add_block(item_id, new_state, owner):
     #packed_last_block_data = CONS.D_FORMAT.pack(last_block_data.data)
 
     packed_last_block_head , packed_last_block_data = pack_block(last_block_head, last_block_data)
-    last_block_hex = b''
+    last_block_hex = hashlib.sha256(packed_last_block_head + packed_last_block_data).digest()
     
     new_block_head = CONS.BlockHead(
         last_block_hex,

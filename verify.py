@@ -8,8 +8,16 @@ import hashlib
 def verify():
     blocks_list = UTIL.unpack_all_blockHead_blockData()
     unique_item_ids = {}
+    unique_parent_hashes = {}
+
     for block_head, block_data in blocks_list:
         unique_item_ids[block_head.item_id] = block_head , block_data
+        if block_head.prevHash in unique_parent_hashes:
+            print("State of Block Chain : ERROR !")
+            print_error_and_exit(block_head , block_data)
+            print("Error: Duplicate Parent Hash")
+            sys.exit(1)
+        unique_parent_hashes[block_head.prevHash] = "TRUE"
     
     for item_id in unique_item_ids:
         check_item_id(item_id)
@@ -24,21 +32,23 @@ def check_item_id(item_id):
 
         if curr.state == "CHECKEDIN" and prev is not None and prev.state != "CHECKEDOUT":
             print("State of Block Chain : ERROR !")
-            print_error_and_exit(curr , block_data)
+            print_error_and_exit(curr, block_data)
             print("Error: Item ID is not in CHECKEDIN state, CHECKOUT failed for Item ID: ", item_id)
             sys.exit(1)
 
-        elif curr.state == "CHECKEDOUT" and prev.state != "CHECKEDIN":
+        elif curr.state == "CHECKEDOUT" and (prev is None or prev.state != "CHECKEDIN"):
             print("State of Block Chain : ERROR !")
-            print_error_and_exit(curr , block_data)
+            print_error_and_exit(curr, block_data)
             print("Error: Item ID is not in CHECKEDOUT state, CHECKOUT failed for Item ID: ", item_id)
             sys.exit(1)
-        
-        elif curr.state in CONS.STATE_MAP and prev.state != "CHECKEDIN":
+            
+        elif curr.state in CONS.REMOVE_REASON_MAP and (prev is None or prev.state != "CHECKEDIN"):
             print("State of Block Chain : ERROR !")
-            print_error_and_exit(curr , block_data)
+            print_error_and_exit(curr, block_data)
             print("Error: Invalid Remove Block, Prev Block Not Checked In")
             sys.exit(1)
+
+        prev = curr
 
 def print_error_and_exit(block_head , block_data):
     packed_error_block_head , packed_error_block_data = UTIL.pack_block(block_head, block_data)

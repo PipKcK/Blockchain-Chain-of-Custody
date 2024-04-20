@@ -10,6 +10,8 @@ import add as ADD
 import checkout as CHECKOUT
 import checkin as CHECKIN
 import remove as REMOVE
+import show as SHOW
+import verify as VERIFY
 
 
 # from icecream import ic
@@ -54,14 +56,14 @@ def main():
     parser_show = subparsers.add_parser('show')
     show_subparsers = parser_show.add_subparsers(dest='show_command')
 
-    #bchoc show cases -p password
+    #bchoc show cases
     parser_show_cases = show_subparsers.add_parser('cases')
-    parser_show_cases.add_argument('-p', '--password', required=True, help='Password')
+    parser_show_cases.add_argument('-p', '--password', required=False, help='Password')
 
     #bchoc show items -c case_id -p password
     parser_show_items = show_subparsers.add_parser('items')
     parser_show_items.add_argument('-c', '--case_id', required=True, help='Case ID')
-    parser_show_items.add_argument('-p', '--password', required=True, help='Password')
+    parser_show_items.add_argument('-p', '--password', required=False, help='Password')
 
     #bchoc show history [-c case_id] [-i item_id] [-n num_entries] [-r] -p password
     parser_show_history = show_subparsers.add_parser('history')
@@ -69,7 +71,7 @@ def main():
     parser_show_history.add_argument('-i', '--item_id', required=False, help='Item ID')
     parser_show_history.add_argument('-n', '--num_entries', required=False, help='Number of entries')
     parser_show_history.add_argument('-r', '--reverse', action='store_true', required=False, help='Reverse')
-    parser_show_history.add_argument('-p', '--password', required=True, help='Password')
+    parser_show_history.add_argument('-p', '--password', required=False, help='Password')
 
     #bchoc remove -i item_id -y reason -p password(creator’s)
     parser_remove = subparsers.add_parser('remove')
@@ -109,18 +111,20 @@ def main():
 
     if args.command == 'show':
         if args.show_command == 'cases':
-            sys.exit(0)
+            SHOW.show_cases()
             # ic(args.show_command)
             # ic(args.password)
             # show_cases_function()
         if args.show_command == 'items':
-            sys.exit(1)
+            SHOW.show_items(args.case_id)
+            #sys.exit(1)
             # ic(args.show_command)
             # ic(args.case_id)
             # ic(args.password)
             # show_items_function()
         if args.show_command == 'history': # Note: If optional args are not provided, they will be None
-            sys.exit(1)
+            SHOW.history_case_id(args.case_id, args.item_id, args.password, args.num_entries, args.reverse)
+            #sys.exit(0)
             # ic(args.show_command)
             # ic(args.case_id)
             # ic(args.item_id)
@@ -144,7 +148,8 @@ def main():
         # init_function()
 
     if args.command == 'verify':
-        sys.exit(1)
+        VERIFY.verify()
+        #sys.exit(1)
         # ic(args.command)
         # verify_function()
 
