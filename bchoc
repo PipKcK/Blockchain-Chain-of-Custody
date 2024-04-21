@@ -123,7 +123,7 @@ def main():
             # ic(args.password)
             # show_items_function()
         if args.show_command == 'history': # Note: If optional args are not provided, they will be None
-            SHOW.history_case_id(args.case_id, args.item_id, args.password, args.num_entries, args.reverse)
+            SHOW.show_history(args.case_id, args.item_id, args.num_entries, args.reverse, args.password)
             #sys.exit(0)
             # ic(args.show_command)
             # ic(args.case_id)

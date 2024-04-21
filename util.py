@@ -124,6 +124,14 @@ def get_block_list_for_item_id(item_id):
             item_blocks.append((block_head, block_data))
     return item_blocks
 
+def get_block_list_for_case_id(case_id):
+    blocks_list = unpack_all_blockHead_blockData()
+    item_blocks = []
+    for block_head, block_data in blocks_list:
+        if block_head.case_id == case_id:
+            item_blocks.append((block_head, block_data))
+    return item_blocks
+
 
 def check_password(password):
     if password not in CONS.PASSWORD_MAP:
