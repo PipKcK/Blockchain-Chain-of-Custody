@@ -1,10 +1,8 @@
 #!/usr/bin/env python3
 
-
 import sys
 import CONSTANTS as CONS
 import os
-from datetime import datetime
 
 def init():
     if os.path.exists(CONS.filePath) and check_initial_block(CONS.filePath):

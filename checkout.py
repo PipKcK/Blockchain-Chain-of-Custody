@@ -1,4 +1,3 @@
-import init as INIT
 import CONSTANTS as CONS
 import util as UTIL
 import sys

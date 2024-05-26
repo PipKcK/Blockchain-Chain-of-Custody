@@ -16,7 +16,7 @@ import verify as VERIFY
 
 # from icecream import ic
 
-#Authors: ZebraCatPenguin: Ujjwal, Wejdan
+#Authors: ZebraCatPenguin: Ujjwal, Siddarth, Kushal, Wejdan
 
 #bchoc add -c case_id -i item_id [-i item_id ...] -c creator -p password(creator’s)
 #bchoc checkout -i item_id -p password

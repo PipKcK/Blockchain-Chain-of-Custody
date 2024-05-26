@@ -1,0 +1,7 @@
+```README.txt```
+
+Group Name: ZebraCatPenguin
+Team Members: Ujjwal Baranwal (ASU ID: 1220406356), Kushal Paliwal (ASU ID: 1219846199), Siddharth Jain (ASU ID: 1219796916), Wejdan Alharthi (ASU ID: 1221664340)
+
+Description of the Project:
+    The program uses 'make' to create an executable `bchoc` which is a compilation of all the python scripts implementing commands like `add`, `checkout`, `checkin`, `show`, and `verify` to manage evidence items within a case. Each action is securely logged in a blockchain, maintaining a transparent and tamper-proof record. After creating the executable `bchoc`, a Blockchain can be initialized with `./bchoc init`. If the file specified by CONS.filePath exists and contains a valid initial block or if the file does not exist or does not contain a valid initial block, the function creates a new file and writes an initial block to it. The `add` command adds new evidence item(s) to the blockchain and associate it with the given case identifier. Both `checkout` and `checkin` commands adds a new checkout/checkin entry for a given evidence item. This is password protected and can be accessed by any user's password. The `show` command displays the list of all the `cases`, `items` and the blockchain entries for the requested item. The `remove` command prohibits further action on the selected evidence item. And lastly the `verify` function parses the Blockchain verifying every entry present. This program is designed to streamline forensic investigations and uphold the highest standards of evidence management. 

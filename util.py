@@ -9,8 +9,6 @@ import uuid
 import sys
 from datetime import datetime
 import hashlib
-import binascii
-
 
 def pack_block(block_head, block_data):
 

@@ -1,10 +1,5 @@
-#!/usr/bin/env python3
-
 import sys
-import os
-
-from datetime import datetime
-
+import datetime
 import init as INIT
 import CONSTANTS as CONS
 import util as UTIL
@@ -27,7 +22,7 @@ def add_new_block(case_id , item_id, creator, password):
 
     # Create a New Block Head
     prevHash = b''
-    timestamp = datetime.now().timestamp()
+    timestamp = datetime.datetime.now().timestamp()
     state = "CHECKEDIN"
     owner = ""
     length = 0
